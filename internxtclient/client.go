@@ -15,11 +15,11 @@ import (
 )
 
 const (
-	DefaultDriveAPIURL  = "https://api.internxt.com/drive"
-	DefaultAuthAPIURL   = "https://api.internxt.com/drive/auth"
-	DefaultUsersAPIURL  = "https://api.internxt.com/users"
-	DefaultBucketAPIURL = "https://api.internxt.com/buckets"
-	DefaultBaseAPIURL   = "https://api.internxt.com"
+	DefaultDriveAPIURL  = "https://gateway.internxt.com/drive"
+	DefaultAuthAPIURL   = "https://gateway.internxt.com/drive/auth"
+	DefaultUsersAPIURL  = "https://gateway.internxt.com/users"
+	DefaultBucketAPIURL = "https://gateway.internxt.com/buckets"
+	DefaultBaseAPIURL   = "https://gateway.internxt.com"
 
 	DefaultAppCryptoSecret  = "6KYQBP847D4ATSFA"
 	DefaultAppCryptoSecret2 = "8Q8VMUE3BJZV87GT"
@@ -211,6 +211,7 @@ func (c *Client) doRequest(apiType APIType, method, path string, body any, resul
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Accept", "application/json")
 		req.Header.Set("internxt-client", "go-internxt-drive")
+		req.Header.Set("x-internxt-desktop-header", "3b68706a367fd567b929396290b1de40768bb768")
 	} else {
 		req.Header = *headers
 	}
