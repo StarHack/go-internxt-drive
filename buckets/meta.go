@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/StarHack/go-internxt-drive/config"
+	"github.com/internxt/rclone/config"
 )
 
 type CreateMetaRequest struct {
@@ -65,7 +65,7 @@ func CreateMetaFile(cfg *config.Config, name, bucketID, fileID, encryptVersion, 
 	req.Header.Set("internxt-version", "v1.0.436")
 	req.Header.Set("internxt-client", "drive-web")
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

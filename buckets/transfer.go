@@ -4,16 +4,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/internxt/rclone/config"
 )
 
-func Transfer(part UploadPart, r io.Reader, size int64) error {
+func Transfer(cfg *config.Config, part UploadPart, r io.Reader, size int64) error {
 	req, err := http.NewRequest("PUT", part.URL, r)
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/octet-stream")
 	req.ContentLength = size
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}

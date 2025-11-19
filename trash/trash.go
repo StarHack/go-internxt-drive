@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/StarHack/go-internxt-drive/config"
-	"github.com/StarHack/go-internxt-drive/folders"
+	"github.com/internxt/rclone/config"
+	"github.com/internxt/rclone/folders"
 )
 
 type TrashType string
@@ -61,7 +61,7 @@ func GetPaginatedTrashFolders(cfg *config.Config, limit, offset int, sort SortFi
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func GetPaginatedTrashFiles(cfg *config.Config, limit, offset int, sort SortFiel
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func AddToTrash(cfg *config.Config, items []TrashRef) error {
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func DeleteAllTrash(cfg *config.Config) error {
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -187,7 +187,7 @@ func RequestDeleteAllTrash(cfg *config.Config) error {
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func DeleteSpecifiedTrashItems(cfg *config.Config, items []TrashRef) error {
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ func DeleteTrashFile(cfg *config.Config, fileID string) error {
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -253,7 +253,7 @@ func DeleteTrashFolder(cfg *config.Config, folderID int64) error {
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}

@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/StarHack/go-internxt-drive/config"
-	"github.com/StarHack/go-internxt-drive/folders"
+	"github.com/internxt/rclone/config"
+	"github.com/internxt/rclone/folders"
 )
 
 const filesPath = "/files"
@@ -23,7 +23,7 @@ func GetFileMeta(cfg *config.Config, fileUUID string) (*folders.File, error) {
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func DeleteFile(cfg *config.Config, uuid string) error {
 		return err
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func UpdateFileMeta(cfg *config.Config, fileUUID string, updated *folders.File) 
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func MoveFile(cfg *config.Config, fileUUID, destinationFolderUUID string) (*fold
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func RenameFile(cfg *config.Config, fileUUID, newPlainName, newType string) erro
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -189,7 +189,7 @@ func GetRecentFiles(cfg *config.Config, limit int) ([]folders.File, error) {
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

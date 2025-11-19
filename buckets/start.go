@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/StarHack/go-internxt-drive/config"
+	"github.com/internxt/rclone/config"
 )
 
 const API = "https://api.internxt.com"
@@ -48,7 +48,7 @@ func StartUpload(cfg *config.Config, bucketID string, parts []UploadPartSpec) (*
 	req.Header.Set("internxt-client", "drive-web")
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

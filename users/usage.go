@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/StarHack/go-internxt-drive/config"
+	"github.com/internxt/rclone/config"
 )
 
 type UsageResponse struct {
@@ -22,7 +22,7 @@ func GetUsage(cfg *config.Config) (*UsageResponse, error) {
 	}
 
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

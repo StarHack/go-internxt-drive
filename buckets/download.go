@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/StarHack/go-internxt-drive/config"
+	"github.com/internxt/rclone/config"
 )
 
 const bucketAPIBase = "https://api.internxt.com"
@@ -46,7 +46,7 @@ func GetBucketFileInfo(cfg *config.Config, bucketID, fileID string) (*BucketFile
 	req.Header.Set("internxt-version", "1.0")
 	req.Header.Set("internxt-client", "internxt-go-sdk")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,11 @@ func DownloadFile(cfg *config.Config, fileID, destPath string) error {
 	}
 
 	// 3) GET the encrypted shard directly from its presigned URL
-	resp, err := http.Get(shard.URL)
+	req, err := http.NewRequest("GET", shard.URL, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -179,7 +183,7 @@ func DownloadFileStream(cfg *config.Config, fileUUID string, optionalRange ...st
 		req.Header.Set("Range", rangeValue)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

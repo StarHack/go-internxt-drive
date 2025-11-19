@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/StarHack/go-internxt-drive/config"
+	"github.com/internxt/rclone/config"
 )
 
 func UploadFile(cfg *config.Config, filePath, targetFolderUUID string, modTime time.Time) (*CreateMetaResponse, error) {
@@ -21,9 +21,7 @@ func UploadFile(cfg *config.Config, filePath, targetFolderUUID string, modTime t
 		return nil, err
 	}
 	plainSize := int64(len(raw))
-	ph := sha256.Sum256(raw)
-
-	ph = [32]byte{}
+	var ph [32]byte
 	if _, err := rand.Read(ph[:]); err != nil {
 		return nil, fmt.Errorf("cannot generate random index: %w", err)
 	}
@@ -52,7 +50,7 @@ func UploadFile(cfg *config.Config, filePath, targetFolderUUID string, modTime t
 		return nil, err
 	}
 	part := startResp.Uploads[0]
-	if err := Transfer(part, r, plainSize); err != nil {
+	if err := Transfer(cfg, part, r, plainSize); err != nil {
 		return nil, err
 	}
 	encIndex := hex.EncodeToString(ph[:])
@@ -109,7 +107,7 @@ func UploadFileStream(cfg *config.Config, targetFolderUUID, fileName string, in 
 
 	part := startResp.Uploads[0]
 
-	if err := Transfer(part, r, plainSize); err != nil {
+	if err := Transfer(cfg, part, r, plainSize); err != nil {
 		return nil, err
 	}
 

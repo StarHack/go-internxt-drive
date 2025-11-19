@@ -17,7 +17,7 @@ import (
 
 	"crypto/sha1"
 
-	"github.com/StarHack/go-internxt-drive/config"
+	"github.com/internxt/rclone/config"
 
 	"golang.org/x/crypto/pbkdf2"
 )
@@ -70,7 +70,14 @@ func AccessLogin(cfg *config.Config, lr *LoginResponse) (*AccessResponse, error)
 	}
 
 	b, _ := json.Marshal(req)
-	resp, err := http.Post(cfg.DriveAPIURL+"/auth/login/access", "application/json", bytes.NewReader(b))
+
+	httpReq, err := http.NewRequest(http.MethodPost, cfg.DriveAPIURL+"/auth/login/access", bytes.NewReader(b))
+	if err != nil {
+		return nil, err
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := cfg.HTTPClient.Do(httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -110,8 +117,7 @@ func AreCredentialsCorrect(cfg *config.Config, hashedPassword string) (bool, err
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return false, err
 	}

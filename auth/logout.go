@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/StarHack/go-internxt-drive/config"
+	"github.com/internxt/rclone/config"
 )
 
 // Logout calls GET {DRIVE_API_URL}/logout to end the session.
@@ -17,7 +17,7 @@ func Logout(cfg *config.Config) error {
 		return err
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}

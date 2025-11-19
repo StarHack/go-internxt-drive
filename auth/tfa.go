@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/StarHack/go-internxt-drive/config"
+	"github.com/internxt/rclone/config"
 )
 
 type TFAEnableRequest struct {
@@ -34,7 +34,7 @@ func IsTFAEnabled(cfg *config.Config) (bool, error) {
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return false, err
 	}
@@ -58,7 +58,7 @@ func FetchTFASetup(cfg *config.Config) (*TFASecretResponse, error) {
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func EnableTFA(cfg *config.Config, key, code string) error {
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func DisableTFA(cfg *config.Config, code string) error {
 	req.Header.Set("Content-Type", "application/json")
 	req.ContentLength = int64(len(bodyBytes))
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}

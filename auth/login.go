@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/StarHack/go-internxt-drive/config"
+	"github.com/internxt/rclone/config"
 )
 
 type LoginResponse struct {
@@ -21,7 +21,14 @@ type LoginResponse struct {
 func Login(cfg *config.Config) (*LoginResponse, error) {
 	payload := map[string]string{"email": cfg.Email}
 	b, _ := json.Marshal(payload)
-	resp, err := http.Post(cfg.DriveAPIURL+"/auth/login", "application/json", bytes.NewReader(b))
+
+	req, err := http.NewRequest(http.MethodPost, cfg.DriveAPIURL+"/auth/login", bytes.NewReader(b))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

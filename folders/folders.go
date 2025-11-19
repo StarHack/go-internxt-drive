@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/StarHack/go-internxt-drive/config"
+	"github.com/internxt/rclone/config"
 )
 
 const foldersPath = "/folders"
@@ -39,7 +39,7 @@ func CreateFolder(cfg *config.Config, reqBody CreateFolderRequest) (*Folder, err
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func DeleteFolder(cfg *config.Config, uuid string) error {
 		return err
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func GetFolderSize(cfg *config.Config, uuid string) (int64, error) {
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return 0, fmt.Errorf("GetFolderSize: request failed: %w", err)
 	}
@@ -154,7 +154,7 @@ func ListFolders(cfg *config.Config, parentUUID string, opts ListOptions) ([]Fol
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +212,7 @@ func ListFiles(cfg *config.Config, parentUUID string, opts ListOptions) ([]File,
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +297,7 @@ func RenameFolder(cfg *config.Config, uuid, newName string) error {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("RenameFolder: request failed: %w", err)
 	}
@@ -331,7 +331,7 @@ func MoveFolder(cfg *config.Config, uuid, destUUID string) error {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("MoveFolder: request failed: %w", err)
 	}
@@ -354,7 +354,7 @@ func Tree(cfg *config.Config, uuid string) (*TreeNode, error) {
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Tree: request failed: %w", err)
 	}
@@ -387,7 +387,7 @@ func Ancestors(cfg *config.Config, uuid string) ([]Folder, error) {
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Ancestors: request failed: %w", err)
 	}
@@ -420,7 +420,7 @@ func GetFolderMetadataById(cfg *config.Config, id int64) (*Folder, error) {
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("GetFolderMetadata: request failed: %w", err)
 	}
@@ -449,7 +449,7 @@ func GetFolderMetadataByUUID(cfg *config.Config, uuid string) (*Folder, error) {
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("GetFolderMeta: request failed: %w", err)
 	}
@@ -478,7 +478,7 @@ func GetMetadataByPath(cfg *config.Config, path string) (*Folder, error) {
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := cfg.HTTPClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("GetMetadataByPath: request failed: %w", err)
 	}
