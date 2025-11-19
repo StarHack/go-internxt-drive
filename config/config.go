@@ -1,8 +1,9 @@
 package config
 
 import (
-	"encoding/json"
-	"os"
+	"net"
+	"net/http"
+	"time"
 )
 
 const (
@@ -16,22 +17,23 @@ const (
 )
 
 type Config struct {
-	Email             string `json:"email,omitempty"`
-	Password          string `json:"password,omitempty"`
-	TFA               string `json:"tfa,omitempty"`
-	Token             string `json:"token,omitempty"`
-	RootFolderID      string `json:"root_folder_id,omitempty"`
-	Bucket            string `json:"bucket,omitempty"`
-	Mnemonic          string `json:"mnemonic,omitempty"`
-	BasicAuthHeader   string `json:"basic_auth_header,omitempty"`
-	DriveAPIURL       string `json:"drive_api_url,omitempty"`
-	AuthAPIURL        string `json:"auth_api_url,omitempty"`
-	UsersAPIURL       string `json:"users_api_url,omitempty"`
-	AppCryptoSecret   string `json:"app_crypto_secret,omitempty"`
-	AppCryptoSecret2  string `json:"app_crypto_secret2,omitempty"`
-	AppMagicIV        string `json:"app_magic_iv,omitempty"`
-	AppMagicSalt      string `json:"app_magic_salt,omitempty"`
-	EncryptedPassword string `json:"encrypted_password,omitempty"`
+	Email             string       `json:"email,omitempty"`
+	Password          string       `json:"password,omitempty"`
+	TFA               string       `json:"tfa,omitempty"`
+	Token             string       `json:"token,omitempty"`
+	RootFolderID      string       `json:"root_folder_id,omitempty"`
+	Bucket            string       `json:"bucket,omitempty"`
+	Mnemonic          string       `json:"mnemonic,omitempty"`
+	BasicAuthHeader   string       `json:"basic_auth_header,omitempty"`
+	DriveAPIURL       string       `json:"drive_api_url,omitempty"`
+	AuthAPIURL        string       `json:"auth_api_url,omitempty"`
+	UsersAPIURL       string       `json:"users_api_url,omitempty"`
+	AppCryptoSecret   string       `json:"app_crypto_secret,omitempty"`
+	AppCryptoSecret2  string       `json:"app_crypto_secret2,omitempty"`
+	AppMagicIV        string       `json:"app_magic_iv,omitempty"`
+	AppMagicSalt      string       `json:"app_magic_salt,omitempty"`
+	EncryptedPassword string       `json:"encrypted_password,omitempty"`
+	HTTPClient        *http.Client `json:"-"`
 }
 
 func NewDefault(email, password string) *Config {
@@ -61,27 +63,6 @@ func NewDefaultToken(token string) *Config {
 	return cfg
 }
 
-func LoadFromJSON(path string) (*Config, error) {
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	var cfg Config
-	if err := json.Unmarshal(b, &cfg); err != nil {
-		return nil, err
-	}
-	cfg.applyDefaults()
-	return &cfg, nil
-}
-
-func (c *Config) SaveToJSON(path string) error {
-	b, err := json.MarshalIndent(c, "", "  ")
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(path, b, os.ModePerm)
-}
-
 func (c *Config) applyDefaults() {
 	if c.DriveAPIURL == "" {
 		c.DriveAPIURL = DefaultDriveAPIURL
@@ -103,5 +84,31 @@ func (c *Config) applyDefaults() {
 	}
 	if c.AppMagicSalt == "" {
 		c.AppMagicSalt = DefaultAppMagicSalt
+	}
+	if c.HTTPClient == nil {
+		c.HTTPClient = newHTTPClient()
+	}
+}
+
+// newHTTPClient: properly configured HTTP client with sensible timeouts
+func newHTTPClient() *http.Client {
+	return &http.Client{
+		Timeout: 60 * time.Second,
+		Transport: &http.Transport{
+			MaxIdleConns:        100,
+			MaxIdleConnsPerHost: 10,
+			MaxConnsPerHost:     50,
+			IdleConnTimeout:     90 * time.Second,
+			DialContext: (&net.Dialer{
+				Timeout:   10 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ResponseHeaderTimeout: 20 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+			DisableKeepAlives:     false,
+			DisableCompression:    false,
+			ForceAttemptHTTP2:     true,
+		},
 	}
 }
