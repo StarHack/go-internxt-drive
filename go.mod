@@ -1,4 +1,4 @@
-module github.com/StarHack/go-internxt-drive
+module github.com/internxt/rclone
 
 go 1.23.0
 
