@@ -131,9 +131,9 @@ func (b *BucketsService) GetBucketFileInfo(bucketID, fileID string) (*BucketFile
 	return &info, nil
 }
 
-// Downloads a file by its UUID and places it at destination
-func (b *BucketsService) DownloadFile(fileUUID, destination string) error {
-	readCloser, err := b.DownloadFileStream(fileUUID)
+// Downloads a file by its ID and places it at destination
+func (b *BucketsService) DownloadFile(fileID, destination string) error {
+	readCloser, err := b.DownloadFileStream(fileID)
 	if err != nil {
 		return b.client.GetError("", nil, err)
 	}
@@ -157,9 +157,9 @@ func (b *BucketsService) DownloadFile(fileUUID, destination string) error {
 // DownloadFileStream returns a ReadCloser that streams the decrypted contents
 // of the file with the given UUID. The caller must close the returned ReadCloser.
 // It takes an optional range header in the format of either "bytes=100-199" or "bytes=100-".
-func (b *BucketsService) DownloadFileStream(fileUUID string, optionalRange ...string) (io.ReadCloser, error) {
+func (b *BucketsService) DownloadFileStream(fileID string, optionalRange ...string) (io.ReadCloser, error) {
 	if !b.client.hasUserDataAccessDataUser() {
-		return nil, fmt.Errorf("no user data available when downloading file %s", fileUUID)
+		return nil, fmt.Errorf("no user data available when downloading file %s", fileID)
 	}
 
 	rangeValue := ""
@@ -168,12 +168,12 @@ func (b *BucketsService) DownloadFileStream(fileUUID string, optionalRange ...st
 	}
 
 	// 1) Fetch file info (including shards and index)
-	info, err := b.GetBucketFileInfo(b.client.UserData.AccessData.User.Bucket, fileUUID)
+	info, err := b.GetBucketFileInfo(b.client.UserData.AccessData.User.Bucket, fileID)
 	if err != nil {
 		return nil, err
 	}
 	if len(info.Shards) == 0 {
-		return nil, fmt.Errorf("no shards found for file %s", fileUUID)
+		return nil, fmt.Errorf("no shards found for file %s", fileID)
 	}
 	shard := info.Shards[0]
 
@@ -201,7 +201,7 @@ func (b *BucketsService) DownloadFileStream(fileUUID string, optionalRange ...st
 				adjustedRange = fmt.Sprintf("bytes=%d-%d", alignedStart, endByte)
 			}
 
-			stream, err := b.DownloadFileStream(fileUUID, adjustedRange)
+			stream, err := b.DownloadFileStream(fileID, adjustedRange)
 			if err != nil {
 				return nil, err
 			}

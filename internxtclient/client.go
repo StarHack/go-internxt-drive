@@ -18,7 +18,7 @@ const (
 	DefaultDriveAPIURL  = "https://gateway.internxt.com/drive"
 	DefaultAuthAPIURL   = "https://gateway.internxt.com/drive/auth"
 	DefaultUsersAPIURL  = "https://gateway.internxt.com/users"
-	DefaultBucketAPIURL = "https://gateway.internxt.com/buckets"
+	DefaultBucketAPIURL = "https://gateway.internxt.com/network/buckets"
 	DefaultBaseAPIURL   = "https://gateway.internxt.com"
 
 	DefaultAppCryptoSecret  = "6KYQBP847D4ATSFA"
