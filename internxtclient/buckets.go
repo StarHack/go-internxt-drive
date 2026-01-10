@@ -1,6 +1,7 @@
 package internxtclient
 
 import (
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -258,6 +259,10 @@ func (b *BucketsService) UploadFileStream(targetFolderUUID, fileName string, in 
 		return nil, fmt.Errorf("no user data available when uploading file %s", fileName)
 	}
 
+	if strings.HasPrefix(fileName, ".") {
+		return nil, fmt.Errorf("uploading dotfiles is not allowed")
+	}
+
 	var ph [32]byte
 	if _, err := rand.Read(ph[:]); err != nil {
 		return nil, fmt.Errorf("cannot generate random index: %w", err)
@@ -313,7 +318,9 @@ func (b *BucketsService) UploadFileStream(targetFolderUUID, fileName string, in 
 }
 
 func (b *BucketsService) Transfer(part UploadPart, r io.Reader, size int64) error {
-	req, err := http.NewRequest("PUT", part.URL, r)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, "PUT", part.URL, r)
 	if err != nil {
 		return err
 	}
@@ -337,7 +344,7 @@ func (b *BucketsService) StartUpload(bucketID string, parts []UploadPartSpec) (*
 		return nil, fmt.Errorf("can't start upload without user data")
 	}
 
-	endpoint := path.Join("v2", "buckets", bucketID, "files", "start")
+	endpoint := path.Join("network", "v2", "buckets", bucketID, "files", "start")
 	reqBody := startUploadReq{Uploads: parts}
 
 	headers := http.Header{}
@@ -529,7 +536,7 @@ func (b *BucketsService) CreateMetaFile(name, fileID, encryptVersion, folderUuid
 }
 
 func (b *BucketsService) FinishUpload(index string, shards []Shard) (*FinishUploadResp, error) {
-	endpoint := path.Join("v2", "buckets", b.client.UserData.AccessData.User.Bucket, "files", "finish")
+	endpoint := path.Join("network", "v2", "buckets", b.client.UserData.AccessData.User.Bucket, "files", "finish")
 	payload := map[string]interface{}{
 		"index":  index,
 		"shards": shards,

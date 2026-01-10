@@ -3,6 +3,7 @@ package internxtclient
 import (
 	"net/http"
 	"path"
+	"strings"
 	"time"
 )
 
@@ -149,7 +150,14 @@ func (f *FoldersService) ListFolders(parentUUID string, opts *ListOptions) ([]Fo
 		return nil, f.client.GetError(endpoint, resp, err)
 	}
 
-	return wrapper.Folders, nil
+	var filteredFolders []Folder
+	for _, folder := range wrapper.Folders {
+		if !strings.HasPrefix(folder.PlainName, ".") {
+			filteredFolders = append(filteredFolders, folder)
+		}
+	}
+
+	return filteredFolders, nil
 }
 
 // ListFiles lists child files under the given parent UUID.
@@ -165,7 +173,14 @@ func (f *FoldersService) ListFiles(parentUUID string, opts *ListOptions) ([]File
 		return nil, f.client.GetError(endpoint, resp, err)
 	}
 
-	return wrapper.Files, nil
+	var filteredFiles []File
+	for _, file := range wrapper.Files {
+		if !strings.HasPrefix(file.PlainName, ".") {
+			filteredFiles = append(filteredFiles, file)
+		}
+	}
+
+	return filteredFiles, nil
 }
 
 // This function will get all of the files in a folder, getting 50 at a time until completed
@@ -186,7 +201,13 @@ func (f *FoldersService) ListAllFiles(parentUUID string) ([]File, error) {
 			break
 		}
 	}
-	return outFiles, nil
+	var filtered []File
+	for _, file := range outFiles {
+		if !strings.HasPrefix(file.PlainName, ".") {
+			filtered = append(filtered, file)
+		}
+	}
+	return filtered, nil
 }
 
 // This function will get all of the folders in a folder, getting 50 at a time until completed
@@ -207,7 +228,13 @@ func (f *FoldersService) ListAllFolders(parentUUID string) ([]Folder, error) {
 			break
 		}
 	}
-	return outFolders, nil
+	var filtered []Folder
+	for _, folder := range outFolders {
+		if !strings.HasPrefix(folder.PlainName, ".") {
+			filtered = append(filtered, folder)
+		}
+	}
+	return filtered, nil
 }
 
 // RenameFolder updates the plainName of an existing folder.
@@ -269,5 +296,26 @@ func (f *FoldersService) Tree(parentUUID string) (*Folder, error) {
 		return nil, f.client.GetError(endpoint, resp, err)
 	}
 
+	filterDotfiles(&wrapper.Folder)
+
 	return &wrapper.Folder, nil
+}
+
+func filterDotfiles(folder *Folder) {
+	var filteredFiles []File
+	for _, file := range folder.Files {
+		if !strings.HasPrefix(file.PlainName, ".") {
+			filteredFiles = append(filteredFiles, file)
+		}
+	}
+	folder.Files = filteredFiles
+
+	var filteredChildren []Folder
+	for _, child := range folder.Children {
+		if !strings.HasPrefix(child.PlainName, ".") {
+			filterDotfiles(&child) // Recurse
+			filteredChildren = append(filteredChildren, child)
+		}
+	}
+	folder.Children = filteredChildren
 }
