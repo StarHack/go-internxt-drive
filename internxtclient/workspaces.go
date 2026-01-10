@@ -1,13 +1,13 @@
-package workspaces
+package internxtclient
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"net/http"
-
-	"github.com/StarHack/go-internxt-drive/config"
+	"path"
 )
+
+type WorkspacesService struct {
+	client *Client
+}
 
 const workspacesPath = "/workspaces"
 
@@ -58,26 +58,13 @@ type WorkspacesResponse struct {
 }
 
 // GetWorkspaces calls GET {DriveAPIURL}/workspaces and returns the parsed response
-func GetWorkspaces(cfg *config.Config) (*WorkspacesResponse, error) {
-	endpoint := cfg.DriveAPIURL + workspacesPath
-	req, err := http.NewRequest("GET", endpoint, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+cfg.Token)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+func (w *WorkspacesService) GetWorkspaces() (*WorkspacesResponse, error) {
+	endpoint := path.Join(workspacesPath)
 
-	var wr WorkspacesResponse
-	if err := json.NewDecoder(resp.Body).Decode(&wr); err != nil {
-		// on decode error, print raw body for inspection
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		fmt.Println("raw response:", buf.String())
-		return nil, err
+	var workspacesResponse WorkspacesResponse
+
+	if resp, err := w.client.Get(APITypeDrive, endpoint, &workspacesResponse, nil); err != nil {
+		return nil, w.client.GetError(endpoint, resp, err)
 	}
-	return &wr, nil
+	return &workspacesResponse, nil
 }
