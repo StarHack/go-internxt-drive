@@ -1,5 +1,7 @@
 # go-internxt-drive
 
+> Updated to `client` branch which introduced some breaking changes. Old codebase was in commit `8c3b319`
+
 A pure Go library allowing you to interact with the [internxt Drive API](https://api.internxt.com/drive/). Please refer to `docs/` directory for examples on how to get started.
 
 Currently supports:
