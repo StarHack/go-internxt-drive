@@ -124,6 +124,7 @@ func (b *BucketsService) GetBucketFileInfo(bucketID, fileID string) (*BucketFile
 
 	headers := http.Header{}
 	headers.Set("Authorization", b.client.UserData.BasicAuthHeader)
+	headers.Set("x-api-version", "2")
 
 	if resp, err := b.client.Get(APITypeBucket, endpoint, &info, &headers); err != nil {
 		return nil, b.client.GetError(endpoint, resp, err)

@@ -95,13 +95,10 @@ func (a *AuthService) AccessLogin(loginResponse *LoginResponse, password string)
 
 	a.client.UserData.AccessData = &accessResponse
 
-	// 1) SHA256 the raw pass string
-	sum := sha256.Sum256([]byte(accessResponse.User.UserID))
-	hexPass := hex.EncodeToString(sum[:])
-
-	// 2) build "user:hexPass" and Base64
-	creds := fmt.Sprintf("%s:%s", accessResponse.User.BridgeUser, hexPass)
-	a.client.UserData.BasicAuthHeader = "Basic " + base64.StdEncoding.EncodeToString([]byte(creds))
+	a.client.UserData.BasicAuthHeader = buildBridgeAuthHeader(
+		accessResponse.User.BridgeUser,
+		accessResponse.User.UserID,
+	)
 
 	a.client.UserData.AccessData.User.Mnemonic, err = decryptTextWithKey(accessResponse.User.Mnemonic, password)
 	if err != nil {
@@ -109,6 +106,16 @@ func (a *AuthService) AccessLogin(loginResponse *LoginResponse, password string)
 	}
 
 	return &accessResponse, nil
+}
+
+func buildBridgeAuthHeader(username, userID string) string {
+	sum := sha256.Sum256([]byte(userID))
+	return buildBasicAuthHeader(username, hex.EncodeToString(sum[:]))
+}
+
+func buildBasicAuthHeader(username, password string) string {
+	creds := fmt.Sprintf("%s:%s", username, password)
+	return "Basic " + base64.StdEncoding.EncodeToString([]byte(creds))
 }
 
 func (a *AuthService) AreCredentialsCorrect(hashedPassword string) (bool, error) {

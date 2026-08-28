@@ -206,14 +206,15 @@ func (c *Client) doRequest(apiType APIType, method, path string, body any, resul
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// If we didn't receive headers, assume json
-	if headers == nil {
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Accept", "application/json")
-		req.Header.Set("internxt-client", "go-internxt-drive")
-		req.Header.Set("x-internxt-desktop-header", "3b68706a367fd567b929396290b1de40768bb768")
-	} else {
-		req.Header = *headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("internxt-client", "go-internxt-drive")
+	req.Header.Set("internxt-version", "1.0")
+	req.Header.Set("x-internxt-desktop-header", "3b68706a367fd567b929396290b1de40768bb768")
+	if headers != nil {
+		for key, values := range *headers {
+			req.Header[key] = append([]string(nil), values...)
+		}
 	}
 
 	if c.hasUserDataAccessData() && c.UserData.AccessData.NewToken != "" {
