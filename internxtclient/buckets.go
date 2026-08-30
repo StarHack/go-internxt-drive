@@ -228,14 +228,9 @@ func (b *BucketsService) DownloadFileStream(fileID string, optionalRange ...stri
 		req.Header.Set("Range", rangeValue)
 	}
 
-	resp, err := b.client.HTTPClient.Do(req)
+	resp, err := b.client.doRawGET(req)
 	if err != nil {
 		return nil, err
-	}
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		return nil, fmt.Errorf("shard download failed: %d %s", resp.StatusCode, string(body))
 	}
 
 	// 5) Wrap in AES‑CTR decryptor

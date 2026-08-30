@@ -182,26 +182,64 @@ func (c *Client) hasUserDataLoginData() bool {
 
 // doRequest handles sending the request and decoding the response into result.
 func (c *Client) doRequest(apiType APIType, method, path string, body any, result any, headers *http.Header) (*Response, error) {
-	finalUrl, err := url.JoinPath(c.URL(apiType), path)
+	finalURL, err := url.JoinPath(c.URL(apiType), path)
 	if err != nil {
 		return nil, fmt.Errorf("invalid URL: %w", err)
 	}
 
-	finalUrlUnescaped, err := url.PathUnescape(finalUrl)
+	finalURLUnescaped, err := url.PathUnescape(finalURL)
 	if err != nil {
 		return nil, fmt.Errorf("cannot unescape URL: %w", err)
 	}
 
-	var buf io.Reader
+	var bodyBytes []byte
 	if body != nil {
-		jsonBody, err := json.Marshal(body)
+		bodyBytes, err = json.Marshal(body)
 		if err != nil {
 			return nil, fmt.Errorf("failed to encode body: %w", err)
 		}
-		buf = bytes.NewBuffer(jsonBody)
 	}
 
-	req, err := http.NewRequest(method, finalUrlUnescaped, buf)
+	var lastResponse *Response
+	var lastErr error
+	for attempt := 0; attempt <= maxRequestRetries; attempt++ {
+		if attempt > 0 {
+			var waitBody []byte
+			var waitHeaders http.Header
+			if lastResponse != nil {
+				waitBody = lastResponse.Body
+				waitHeaders = lastResponse.Headers
+			}
+			time.Sleep(retryWait(attempt, waitBody, waitHeaders))
+		}
+
+		response, err := c.doRequestOnce(method, finalURLUnescaped, bodyBytes, headers)
+		if err == nil {
+			if result != nil {
+				if err := json.Unmarshal(response.Body, result); err != nil {
+					return response, fmt.Errorf("failed to unmarshal response: %w", err)
+				}
+			}
+			return response, nil
+		}
+
+		lastResponse = response
+		lastErr = err
+		if !shouldRetryAttempt(response, err, attempt) {
+			return response, err
+		}
+	}
+
+	return lastResponse, lastErr
+}
+
+func (c *Client) doRequestOnce(method, finalURL string, body []byte, headers *http.Header) (*Response, error) {
+	var buf io.Reader
+	if len(body) > 0 {
+		buf = bytes.NewReader(body)
+	}
+
+	req, err := http.NewRequest(method, finalURL, buf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -218,7 +256,6 @@ func (c *Client) doRequest(apiType APIType, method, path string, body any, resul
 	}
 
 	if c.hasUserDataAccessData() && c.UserData.AccessData.NewToken != "" {
-		// Check if it was already set
 		if req.Header.Get("Authorization") == "" {
 			req.Header.Set("Authorization", "Bearer "+c.UserData.AccessData.NewToken)
 		}
@@ -230,7 +267,7 @@ func (c *Client) doRequest(apiType APIType, method, path string, body any, resul
 	}
 	defer resp.Body.Close()
 
-	b, err := io.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't read response body: %w", err)
 	}
@@ -238,20 +275,50 @@ func (c *Client) doRequest(apiType APIType, method, path string, body any, resul
 	response := &Response{
 		StatusCode: resp.StatusCode,
 		Headers:    resp.Header.Clone(),
-		Body:       b,
+		Body:       responseBody,
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(b))
-	}
-
-	if result != nil {
-		if err := json.Unmarshal(b, result); err != nil {
-			return response, fmt.Errorf("failed to unmarshal response: %w", err)
-		}
+		return response, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(responseBody))
 	}
 
 	return response, nil
+}
+
+func (c *Client) doRawGET(req *http.Request) (*http.Response, error) {
+	var lastBody []byte
+	var lastHeaders http.Header
+	var lastErr error
+
+	for attempt := 0; attempt <= maxRequestRetries; attempt++ {
+		if attempt > 0 {
+			time.Sleep(retryWait(attempt, lastBody, lastHeaders))
+		}
+
+		resp, err := c.HTTPClient.Do(req)
+		if err != nil {
+			lastErr = err
+			if isRetryableNetworkError(err) && attempt < maxRequestRetries {
+				continue
+			}
+			return nil, err
+		}
+
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			return resp, nil
+		}
+
+		lastBody, _ = io.ReadAll(resp.Body)
+		lastHeaders = resp.Header.Clone()
+		resp.Body.Close()
+		lastErr = fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(lastBody))
+		if shouldRetryResponse(resp.StatusCode, lastBody) && attempt < maxRequestRetries {
+			continue
+		}
+		return nil, lastErr
+	}
+
+	return nil, lastErr
 }
 
 func (c *Client) doRequestWithQuery(apiType APIType, method, endpoint string, query map[string]string, body, out any, headers *http.Header) (*Response, error) {
