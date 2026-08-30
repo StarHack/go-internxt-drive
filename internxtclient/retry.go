@@ -59,8 +59,15 @@ func shouldRetryResponse(status int, body []byte) bool {
 	if isRetryableHTTPStatus(status) {
 		return true
 	}
+	if status == http.StatusNotFound && isParentFolderMissingBody(body) {
+		return true
+	}
 	retryable, _ := parseRetryableBody(body)
 	return retryable
+}
+
+func isParentFolderMissingBody(body []byte) bool {
+	return strings.Contains(strings.ToLower(string(body)), "parent folder does not exist")
 }
 
 func parseRetryableBody(body []byte) (retryable bool, retryAfter time.Duration) {
